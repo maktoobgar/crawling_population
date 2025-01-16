@@ -68,15 +68,15 @@ def print_log(options: Options):
 def get_options(options) -> Options:
     obj = Options()
     obj.population = options.population
-    obj.male_population_percentage = options.male / 100
-    obj.female_population_percentage = 1 - options.male / 100
+    obj.male_population_percentage = round(options.male * 1000) / 100000
+    obj.female_population_percentage = round((100 - options.male) * 1000) / 100000
     obj.male_population_count = int(options.population * obj.male_population_percentage)
     obj.female_population_count = int(
         options.population * obj.female_population_percentage
     )
     obj.friends_per_person = options.friendsPerPerson
-    obj.male_friends_percentage = options.maleFriends / 100
-    obj.female_friends_percentage = 1 - options.maleFriends / 100
+    obj.male_friends_percentage = round(options.maleFriends * 1000) / 100000
+    obj.female_friends_percentage = round((100 - options.maleFriends) * 1000) / 100000
     obj.male_friends_count = int(obj.friends_per_person * obj.male_friends_percentage)
     obj.female_friends_count = int(
         obj.friends_per_person * obj.female_friends_percentage

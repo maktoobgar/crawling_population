@@ -1,5 +1,6 @@
 import optparse
 from general import print_log, get_options, Options
+from alive_progress import alive_bar
 from typing import List
 import random
 import uuid
@@ -183,20 +184,40 @@ def _crawl(person: Person, options: Options, problem: Problem) -> List[Person]:
     choices = random.choices(
         person.friends.all,
         weights=person.friends.probabilities,
-        k=len(person.friends.all),
+        k=1,
+        # k=int(len(person.friends.all) / 2),
     )
     return list(set(choices))
 
 
 def crawl(options: Options, problem: Problem) -> Results:
     results = Results(options.unbiased_analysis)
-    person = problem.get_random_starting_point()
-    crawled_people: List[Person] = []
-    to_crawl: List[Person] = [person]
 
     random.seed(42)
-    for i in range(len(to_crawl)):
-        to_crawl.append(_crawl(to_crawl[i], options, problem))
+    with alive_bar(options.iterations_count) as bar:
+        for _ in range(options.iterations_count):
+            to_crawl: List[Person] = [problem.get_random_starting_point()]
+            crawled_people: List[Person] = []
+
+            for i in range(options.sample_size):
+                new_to_crawl = _crawl(to_crawl[i], options, problem)
+                crawled_people.append(to_crawl[i])
+                for new_person in new_to_crawl:
+                    to_crawl.append(new_person)
+
+            males: List[Person] = []
+            females: List[Person] = []
+            for new_person in crawled_people:
+                if new_person.gender:
+                    females.append(new_person)
+                else:
+                    males.append(new_person)
+
+            results.add_result(set(males), set(females))
+            bar()
+
+    print()
+    return results
 
 
 def main():
@@ -268,6 +289,7 @@ def main():
 
     problem = generate_problem(options)
     results = crawl(options, problem)
+    print(results)
 
 
 if __name__ == "__main__":
