@@ -202,7 +202,7 @@ def crawl(options: Options, problem: Problem) -> Results:
 def main():
     parser = optparse.OptionParser(
         usage="main.py [--population=BIG_NUMBER|--male=PERCENTAGE|--friends-per-person=NUMBER|--male-friends=PERCENTAGE|--sample-size=NUMBER|--iterations=BIG_NUMBER|--unbiased-crawling|--unbiased-analysis]",
-        description="simulates the male and female percentages and analyses the population with taking samples",
+        description="simulates the male and female percentages and analyses the population with taking multiple samples and getting a converged answer out of it.",
     )
     parser.add_option(
         "--population",
