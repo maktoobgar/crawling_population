@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- 🎉 feat: added unbiased crawling
 - 🎉 feat: first good results for normal crawling and normal analysing
 - 🎉 feat: problem generation done
 <!-- ## [0.0.2] - 2022-12-07

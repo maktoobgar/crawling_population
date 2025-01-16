@@ -7,11 +7,9 @@ class Options:
     female_population_percentage: float
     male_population_count: int
     female_population_count: int
-    friends_per_person: int
+    max_friends_per_person: int
     male_friends_percentage: float
     female_friends_percentage: float
-    male_friends_count: int
-    female_friends_count: int
     sample_size: int
     iterations_count: int
     unbiased_analysis: bool
@@ -33,9 +31,9 @@ def print_log(options: Options):
     )
     print(
         colored("Friends/Person:\t\t", "black", attrs=["bold"])
-        + colored(f"{options.friends_per_person}", "blue")
+        + colored(f"{options.max_friends_per_person} Max", "blue")
         + colored(
-            f" ({options.male_friends_count} Male [{options.male_friends_percentage * 100}%] + {options.female_friends_count} Female [{options.female_friends_percentage * 100}%])",
+            f" ({options.male_friends_percentage * 100}% Male + {options.female_friends_percentage * 100}% Female)",
             attrs=["bold"],
         )
     )
@@ -74,13 +72,9 @@ def get_options(options) -> Options:
     obj.female_population_count = int(
         options.population * obj.female_population_percentage
     )
-    obj.friends_per_person = options.friendsPerPerson
+    obj.max_friends_per_person = options.maxFriendsPerPerson
     obj.male_friends_percentage = round(options.maleFriends * 1000) / 100000
     obj.female_friends_percentage = round((100 - options.maleFriends) * 1000) / 100000
-    obj.male_friends_count = int(obj.friends_per_person * obj.male_friends_percentage)
-    obj.female_friends_count = int(
-        obj.friends_per_person * obj.female_friends_percentage
-    )
     obj.sample_size = options.sampleSize
     obj.iterations_count = options.iterations
     obj.unbiased_analysis = options.unbiasedAnalysis

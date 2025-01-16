@@ -44,7 +44,22 @@ class Results:
     def add_result(self, males: List[Person], females: List[Person]):
         all_count = len(males) + len(females)
         if self.unbiased_analysis:
-            pass
+            males_percentage = 0.0
+            for male in males:
+                males_percentage += (
+                    (1 / len(male.friends.all)) if len(male.friends.all) > 0 else 0
+                )
+            females_percentage = 0.0
+            for female in females:
+                females_percentage += (
+                    (1 / len(female.friends.all)) if len(female.friends.all) > 0 else 0
+                )
+            all_percentage = males_percentage + females_percentage
+            males_percentage /= all_percentage
+            females_percentage /= all_percentage
+            self.males_percentages.append(males_percentage)
+            self.females_percentages.append(females_percentage)
+
         else:
             males_percentage = len(males) / all_count
             females_percentage = len(females) / all_count
@@ -92,8 +107,7 @@ class Friends:
             self.males.append(person)
         self.all.append(person)
 
-    def shuffle(self, seed: float = 42):
-        random.seed(seed)
+    def shuffle(self):
         random.shuffle(self.all)
         random.shuffle(self.males)
         random.shuffle(self.females)
@@ -117,8 +131,7 @@ class Problem:
             self.males.append(person)
         self.all.append(person)
 
-    def shuffle(self, seed: float = 42):
-        random.seed(seed)
+    def shuffle(self):
         random.shuffle(self.all)
         random.shuffle(self.males)
         random.shuffle(self.females)
@@ -153,23 +166,28 @@ def generate_problem(options: Options) -> Problem:
         problem.add_person(Person(True))
     problem.shuffle()
     for person in problem.all:
+        friends_count = random.randint(1, options.max_friends_per_person)
+        male_friends_count = int(round(friends_count * options.male_friends_percentage))
         male_friends_count = (
-            options.male_friends_count
-            if person.gender
-            else options.male_friends_count - 1
+            male_friends_count if person.gender else male_friends_count - 1
+        )
+        female_friends_count = int(
+            round(friends_count * options.female_friends_percentage)
         )
         female_friends_count = (
-            options.female_friends_count - 1
-            if person.gender
-            else options.female_friends_count
+            female_friends_count - 1 if person.gender else female_friends_count
         )
 
         for _ in range(male_friends_count):
-            person.friends.add_friend(problem.pick_random_male(person))
+            friend = problem.pick_random_male(person)
+            person.friends.add_friend(friend)
+            friend.friends.add_friend(person)
         for _ in range(female_friends_count):
-            person.friends.add_friend(problem.pick_random_female(person))
-        person.friends.add_friend(person)
+            friend = problem.pick_random_female(person)
+            person.friends.add_friend(friend)
+            friend.friends.add_friend(person)
         person.friends.shuffle()
+        person.friends.add_friend(person)
     return problem
 
 
@@ -178,7 +196,21 @@ def _crawl(person: Person, options: Options, problem: Problem) -> List[Person]:
     person.friends.probabilities = []
     for i in range(len(person.friends.all)):
         if options.unbiased_crawling:
-            pass
+            if person.friends.all[i].id == person.id:
+                allOtherPercentages = 0.0
+                for i in range(len(person.friends.probabilities)):
+                    allOtherPercentages += person.friends.probabilities[i]
+                person.friends.probabilities.append(1 - allOtherPercentages)
+            else:
+                oneOutOfAll = 1.0 / float(len(person.friends.all))
+                betweenZeroToOne = min(
+                    1,
+                    (
+                        float(len(person.friends.all))
+                        / float(len(person.friends.all[i].friends.all))
+                    ),
+                )
+                person.friends.probabilities.append(oneOutOfAll * betweenZeroToOne)
         else:
             person.friends.probabilities.append(1.0 / len(person.friends.all))
     choices = random.choices(
@@ -187,7 +219,7 @@ def _crawl(person: Person, options: Options, problem: Problem) -> List[Person]:
         k=1,
         # k=int(len(person.friends.all) / 2),
     )
-    return list(set(choices))
+    return choices
 
 
 def crawl(options: Options, problem: Problem) -> Results:
@@ -222,7 +254,7 @@ def crawl(options: Options, problem: Problem) -> Results:
 
 def main():
     parser = optparse.OptionParser(
-        usage="main.py [--population=BIG_NUMBER|--male=PERCENTAGE|--friends-per-person=NUMBER|--male-friends=PERCENTAGE|--sample-size=NUMBER|--iterations=BIG_NUMBER|--unbiased-crawling|--unbiased-analysis]",
+        usage="main.py [--population=BIG_NUMBER|--male=PERCENTAGE|--max-friends-per-person=NUMBER|--male-friends=PERCENTAGE|--sample-size=NUMBER|--iterations=BIG_NUMBER|--unbiased-crawling|--unbiased-analysis]",
         description="simulates the male and female percentages and analyses the population with taking multiple samples and getting a converged answer out of it.",
     )
     parser.add_option(
@@ -240,11 +272,11 @@ def main():
         help="sets the male's population count, default 50",
     )
     parser.add_option(
-        "--friends-per-person",
-        dest="friendsPerPerson",
+        "--max-friends-per-person",
+        dest="maxFriendsPerPerson",
         type=int,
-        default=10,
-        help="sets the number of friends each person normally has",
+        default=100,
+        help="sets the maximum number of friends each person normally has, default 100",
     )
     parser.add_option(
         "--male-friends",
@@ -264,21 +296,21 @@ def main():
         "--iterations",
         dest="iterations",
         type=int,
-        default=1000,
-        help="sets the count of how many times to take samples to reach a conclusion, default 1000",
+        default=50,
+        help="sets the count of how many times to take samples to reach a conclusion, default 50",
     )
     parser.add_option(
         "--unbiased-crawling",
         action="store_true",
         dest="unbiasedCrawling",
-        help="does crawling in an unbiased way",
+        help="does crawling in an unbiased way, default False",
         default=False,
     )
     parser.add_option(
         "--unbiased-analysis",
         action="store_true",
         dest="unbiasedAnalysis",
-        help="does analysis in an unbiased way",
+        help="does analysis in an unbiased way, default False",
         default=False,
     )
 
