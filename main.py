@@ -36,7 +36,7 @@ class Results:
     def __init__(self, unbiased_analysis: bool = False):
         self.females_percentages = []
         self.males_percentages = []
-        self.unbiased_analysis = False
+        self.unbiased_analysis = unbiased_analysis
         self.total_percentages_calculated = False
         self.total_males_percentages = 0
         self.total_females_percentages = 0
@@ -191,7 +191,7 @@ def generate_problem(options: Options) -> Problem:
     return problem
 
 
-def _crawl(person: Person, options: Options, problem: Problem) -> List[Person]:
+def _crawl(person: Person, options: Options) -> Person:
     # Calculate the probabilities of each friend to get selected
     person.friends.probabilities = []
     for i in range(len(person.friends.all)):
@@ -217,9 +217,8 @@ def _crawl(person: Person, options: Options, problem: Problem) -> List[Person]:
         person.friends.all,
         weights=person.friends.probabilities,
         k=1,
-        # k=int(len(person.friends.all) / 2),
     )
-    return choices
+    return choices[0]
 
 
 def crawl(options: Options, problem: Problem) -> Results:
@@ -228,14 +227,13 @@ def crawl(options: Options, problem: Problem) -> Results:
     random.seed(42)
     with alive_bar(options.iterations_count) as bar:
         for _ in range(options.iterations_count):
-            to_crawl: List[Person] = [problem.get_random_starting_point()]
+            to_crawl: Person = problem.get_random_starting_point()
             crawled_people: List[Person] = []
 
-            for i in range(options.sample_size):
-                new_to_crawl = _crawl(to_crawl[i], options, problem)
-                crawled_people.append(to_crawl[i])
-                for new_person in new_to_crawl:
-                    to_crawl.append(new_person)
+            for _ in range(options.sample_size):
+                new_to_crawl = _crawl(to_crawl, options)
+                crawled_people.append(to_crawl)
+                to_crawl = new_to_crawl
 
             males: List[Person] = []
             females: List[Person] = []
