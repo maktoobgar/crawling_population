@@ -204,38 +204,41 @@ def generate_problem(options: Options) -> Problem:
             person.friends.add_friend(friend)
             friend.friends.add_friend(person)
         person.friends.shuffle()
-        person.friends.add_friend(person)
+
     return problem
 
 
 def _crawl(person: Person, options: Options) -> Person:
     # Calculate the probabilities of each friend to get selected
     person.friends.probabilities = []
-    for i in range(len(person.friends.all)):
+    person_degree = len(person.friends.all)
+    for i in range(person_degree):
+        person_degree = float(person_degree)
+        friend_degree = float(len(person.friends.all[i].friends.all))
+        allOtherPercentages = 0.0
         if options.unbiased_crawling:
-            if person.friends.all[i].id == person.id:
-                allOtherPercentages = 0.0
-                for i in range(len(person.friends.probabilities)):
-                    allOtherPercentages += person.friends.probabilities[i]
+            probability = min(1.0, (person_degree / friend_degree)) / person_degree
+            person.friends.probabilities.append(probability)
+            allOtherPercentages += probability
+
+            if i == person_degree - 1:
                 person.friends.probabilities.append(1 - allOtherPercentages)
-            else:
-                oneOutOfAll = 1.0 / float(len(person.friends.all))
-                betweenZeroToOne = min(
-                    1,
-                    (
-                        float(len(person.friends.all))
-                        / float(len(person.friends.all[i].friends.all))
-                    ),
-                )
-                person.friends.probabilities.append(oneOutOfAll * betweenZeroToOne)
         else:
-            person.friends.probabilities.append(1.0 / len(person.friends.all))
-    choices = random.choices(
-        person.friends.all,
-        weights=person.friends.probabilities,
-        k=1,
-    )
-    return choices[0]
+            person.friends.probabilities.append(1.0 / person_degree)
+
+    if options.unbiased_crawling:
+        choice = random.choices(
+            person.friends.all + [person],
+            weights=person.friends.probabilities,
+            k=1,
+        )[0]
+    else:
+        choice = random.choices(
+            person.friends.all,
+            weights=person.friends.probabilities,
+            k=1,
+        )[0]
+    return choice
 
 
 def crawl(options: Options, problem: Problem) -> Results:
