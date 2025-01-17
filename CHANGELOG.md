@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- 🎉 feat: specific friendships between X gender and females and males is now possible
 - 🐛 fix: fixed everything
 - 🎉 feat: added unbiased crawling
 - 🎉 feat: first good results for normal crawling and normal analysing

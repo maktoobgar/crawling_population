@@ -166,14 +166,20 @@ def generate_problem(options: Options) -> Problem:
         problem.add_person(Person(True))
     problem.shuffle()
     for person in problem.all:
-        friends_count = random.randint(1, options.max_friends_per_person)
-        male_friends_count = int(round(friends_count * options.male_friends_percentage))
+        if person.gender:
+            friends_count = random.randint(1, options.max_friends_per_female)
+            male_friends_percentage = options.female_on_male_friends_percentage
+            female_friends_percentage = options.female_on_female_friends_percentage
+        else:
+            friends_count = random.randint(1, options.max_friends_per_male)
+            male_friends_percentage = options.male_on_male_friends_percentage
+            female_friends_percentage = options.male_on_female_friends_percentage
+
+        male_friends_count = int(round(friends_count * male_friends_percentage))
         male_friends_count = (
             male_friends_count if person.gender else male_friends_count - 1
         )
-        female_friends_count = int(
-            round(friends_count * options.female_friends_percentage)
-        )
+        female_friends_count = int(round(friends_count * female_friends_percentage))
         female_friends_count = (
             female_friends_count - 1 if person.gender else female_friends_count
         )
@@ -252,7 +258,7 @@ def crawl(options: Options, problem: Problem) -> Results:
 
 def main():
     parser = optparse.OptionParser(
-        usage="main.py [--population=BIG_NUMBER|--male=PERCENTAGE|--max-friends-per-person=NUMBER|--male-friends=PERCENTAGE|--sample-size=NUMBER|--iterations=BIG_NUMBER|--unbiased-crawling|--unbiased-analysis]",
+        usage="main.py [--population=BIG_NUMBER|--male=BIG_NUMBER|--max-friends-per-male=NUMBER|--max-friends-per-female=NUMBER|--male-male-friends=PERCENTAGE|--female-female-friends=PERCENTAGE|--sample-size=NUMBER|--iterations=BIG_NUMBER|--unbiased-crawling|--unbiased-analysis]",
         description="simulates the male and female percentages and analyses the population with taking multiple samples and getting a converged answer out of it.",
     )
     parser.add_option(
@@ -270,18 +276,32 @@ def main():
         help="sets the male's population count, default 50",
     )
     parser.add_option(
-        "--max-friends-per-person",
-        dest="maxFriendsPerPerson",
+        "--max-friends-per-male",
+        dest="maxFriendsPerMale",
         type=int,
         default=100,
-        help="sets the maximum number of friends each person normally has, default 100",
+        help="sets the maximum number of friends each male normally has, default 100",
     )
     parser.add_option(
-        "--male-friends",
-        dest="maleFriends",
+        "--max-friends-per-female",
+        dest="maxFriendsPerFemale",
+        type=int,
+        default=100,
+        help="sets the maximum number of friends each female normally has, default 100",
+    )
+    parser.add_option(
+        "--male-male-percentage",
+        dest="maleMaleFriends",
         type=float,
         default=50,
-        help="sets the male's favoritism friendship in population, default 50",
+        help="sets the males' friendship favoritism percentage among males in population, default 50",
+    )
+    parser.add_option(
+        "--female-female-percentage",
+        dest="femaleFemaleFriends",
+        type=float,
+        default=50,
+        help="sets the females' friendship favoritism percentage among females in population, default 50",
     )
     parser.add_option(
         "--sample-size",
