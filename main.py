@@ -30,8 +30,8 @@ class Results:
     females_percentages: List[float] = []
     unbiased_analysis: bool = False
     total_percentages_calculated: bool = False
-    total_males_percentages: int = 0
-    total_females_percentages: int = 0
+    total_males_percentages: float = 0
+    total_females_percentages: float = 0
 
     def __init__(self, unbiased_analysis: bool = False):
         self.females_percentages = []
@@ -42,6 +42,7 @@ class Results:
         self.total_females_percentages = 0
 
     def add_result(self, males: List[Person], females: List[Person]):
+        self.total_percentages_calculated = False
         all_count = len(males) + len(females)
         if self.unbiased_analysis:
             males_percentage = 0.0
@@ -76,9 +77,12 @@ class Results:
         females_percentages = 0
         for i in range(len(self.females_percentages)):
             females_percentages += self.females_percentages[i]
-        self.total_males_percentages = males_percentages / len(self.males_percentages)
-        self.total_females_percentages = females_percentages / len(
-            self.females_percentages
+        self.total_males_percentages = (
+            int(round(males_percentages / len(self.males_percentages) * 10000)) / 10000
+        )
+        self.total_females_percentages = (
+            int(round(females_percentages / len(self.females_percentages) * 10000))
+            / 10000
         )
         self.total_percentages_calculated = True
 
@@ -175,7 +179,14 @@ def generate_problem(options: Options) -> Problem:
             male_friends_percentage = options.male_on_male_friends_percentage
             female_friends_percentage = options.male_on_female_friends_percentage
 
-        male_friends_count = int(round(friends_count * male_friends_percentage))
+        male_friends_count = int(
+            round(friends_count * male_friends_percentage)
+            - (
+                (random.random() * 4 * options.standard_deviation)
+                - (2 * options.standard_deviation)
+            )
+            * friends_count
+        )
         male_friends_count = (
             male_friends_count if person.gender else male_friends_count - 1
         )
@@ -258,8 +269,8 @@ def crawl(options: Options, problem: Problem) -> Results:
 
 def main():
     parser = optparse.OptionParser(
-        usage="main.py [--population=BIG_NUMBER|--male=BIG_NUMBER|--max-friends-per-male=NUMBER|--max-friends-per-female=NUMBER|--male-male-friends=PERCENTAGE|--female-female-friends=PERCENTAGE|--sample-size=NUMBER|--iterations=BIG_NUMBER|--unbiased-crawling|--unbiased-analysis]",
-        description="simulates the male and female percentages and analyses the population with taking multiple samples and getting a converged answer out of it.",
+        usage="main.py [--population=BIG_NUMBER|--male=BIG_NUMBER|--max-friends-per-male=NUMBER|--max-friends-per-female=NUMBER|--male-male-percentage=PERCENTAGE|--female-female-percentage=PERCENTAGE|--standard-deviation=NUMBER|--sample-size=NUMBER|--iterations=NUMBER|--unbiased-crawling|--unbiased-analysis]",
+        description="Simulates the males and females percentages with their friendship in a population and analyses the population to find the percentages of males and females with taking multiple samples and getting a converged answer out of it. Used Method: 1. Default Crawling: Random Walk 2. Default Analysis: Accuracy 3.Unbiased Crawling: Uses Metropolis-Hastings Random Walk (MHRW) 2.Unbiased Analysis: Uses Re-Weighted Random Walk (RWRW)",
     )
     parser.add_option(
         "--population",
@@ -291,17 +302,24 @@ def main():
     )
     parser.add_option(
         "--male-male-percentage",
-        dest="maleMaleFriends",
+        dest="maleMalePercentage",
         type=float,
         default=50,
         help="sets the males' friendship favoritism percentage among males in population, default 50",
     )
     parser.add_option(
         "--female-female-percentage",
-        dest="femaleFemaleFriends",
+        dest="femaleFemalePercentage",
         type=float,
         default=50,
         help="sets the females' friendship favoritism percentage among females in population, default 50",
+    )
+    parser.add_option(
+        "--standard-deviation",
+        dest="standardDeviation",
+        type=float,
+        default=20,
+        help="affects percentage of the friendship distribution, default 20, max: 50",
     )
     parser.add_option(
         "--sample-size",

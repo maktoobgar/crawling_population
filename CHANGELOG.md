@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- 🎉 feat: added standard deviation for percentage of the friendship
 - 🎉 feat: specific friendships between X gender and females and males is now possible
 - 🐛 fix: fixed everything
 - 🎉 feat: added unbiased crawling

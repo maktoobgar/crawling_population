@@ -13,6 +13,7 @@ class Options:
     male_on_female_friends_percentage: float
     female_on_male_friends_percentage: float
     female_on_female_friends_percentage: float
+    standard_deviation: float
     sample_size: int
     iterations_count: int
     unbiased_analysis: bool
@@ -25,7 +26,7 @@ def print_log(options: Options):
         + ":\n"
     )
     print(
-        colored("Population:\t\t", "black", attrs=["bold"])
+        colored("Population:\t\t\t", "black", attrs=["bold"])
         + colored(options.population, "blue")
         + colored(
             f" ({options.male_population_count} Male [{options.male_population_percentage * 100}%] + {options.female_population_count} Female [{options.female_population_percentage * 100}%])",
@@ -33,7 +34,7 @@ def print_log(options: Options):
         )
     )
     print(
-        colored("Friends/Male:\t\t", "black", attrs=["bold"])
+        colored("Friends/Male:\t\t\t", "black", attrs=["bold"])
         + colored(f"{options.max_friends_per_male} Max", "blue")
         + colored(
             f" ({options.male_on_male_friends_percentage * 100}% Male + {options.male_on_female_friends_percentage * 100}% Female)",
@@ -41,7 +42,7 @@ def print_log(options: Options):
         )
     )
     print(
-        colored("Friends/Female:\t\t", "black", attrs=["bold"])
+        colored("Friends/Female:\t\t\t", "black", attrs=["bold"])
         + colored(f"{options.max_friends_per_female} Max", "blue")
         + colored(
             f" ({options.female_on_male_friends_percentage * 100}% Male + {options.female_on_female_friends_percentage * 100}% Female)",
@@ -49,25 +50,29 @@ def print_log(options: Options):
         )
     )
     print(
-        colored("Sample Size:\t\t", "black", attrs=["bold"])
+        colored("Friendship Standard Deviation:\t", "black", attrs=["bold"])
+        + colored(f"{options.standard_deviation * 100}%", "blue")
+    )
+    print(
+        colored("Sample Size:\t\t\t", "black", attrs=["bold"])
         + colored(f"{options.sample_size}", "blue")
     )
     print(
-        colored("Unbiased Crawling:\t", "black", attrs=["bold"])
+        colored("Unbiased Crawling:\t\t", "black", attrs=["bold"])
         + colored(
             f"{options.unbiased_crawling}",
             "green" if options.unbiased_crawling else "red",
         )
     )
     print(
-        colored("Unbiased Analysis:\t", "black", attrs=["bold"])
+        colored("Unbiased Analysis:\t\t", "black", attrs=["bold"])
         + colored(
             f"{options.unbiased_analysis}",
             "green" if options.unbiased_analysis else "red",
         )
     )
     print(
-        colored("Iterations:\t\t", "black", attrs=["bold"])
+        colored("Iterations:\t\t\t", "black", attrs=["bold"])
         + colored(f"{options.iterations_count}", "blue")
     )
 
@@ -85,15 +90,20 @@ def get_options(options) -> Options:
     )
     obj.max_friends_per_male = options.maxFriendsPerMale
     obj.max_friends_per_female = options.maxFriendsPerFemale
-    obj.male_on_male_friends_percentage = round(options.maleMaleFriends * 1000) / 100000
+    obj.male_on_male_friends_percentage = (
+        round(options.maleMalePercentage * 1000) / 100000
+    )
     obj.male_on_female_friends_percentage = (
-        round((100 - options.maleMaleFriends) * 1000) / 100000
+        round((100 - options.maleMalePercentage) * 1000) / 100000
     )
     obj.female_on_female_friends_percentage = (
-        round(options.femaleFemaleFriends * 1000) / 100000
+        round(options.femaleFemalePercentage * 1000) / 100000
     )
     obj.female_on_male_friends_percentage = (
-        round((100 - options.femaleFemaleFriends) * 1000) / 100000
+        round((100 - options.femaleFemalePercentage) * 1000) / 100000
+    )
+    obj.standard_deviation = (
+        round(min(max(0, options.standardDeviation), 50) * 1000) / 100000
     )
     obj.sample_size = options.sampleSize
     obj.iterations_count = options.iterations
